@@ -236,3 +236,21 @@ FROM Scores;
 
 ## lead()
 * is window function 
+
+---
+---
+
+# Optimization
+
+1. ## index
+2. ## partition 
+
+
+
+## Index:
+* indexes are used to retrive data from the database more quickly than othervise,the user cannot see the index, they are just used to speed up seachs/queries.
+
+    ```SQL 
+        create index idx_lastname
+        on person(lastname);
+    ```
