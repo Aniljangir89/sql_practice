@@ -254,3 +254,130 @@ FROM Scores;
         create index idx_lastname
         on person(lastname);
     ```
+
+* to see index
+
+    ```SQL
+    show index from employees;
+    ```
+*  To drop that index 
+    ```SQL
+    DROP INDEX index_name;
+    ```
+
+## partitions:
+
+* Partitioning = splitting a large table into smaller, manageable pieces (partitions)
+* ➡️ based on a column (date, id, region, etc.)
+* Partitioning helps the database decide which partition(s) to scan,
+not magically jump to a single row in O(1).
+
+### Why use partitioning?
+
+  -  ✅ Faster queries (partition pruning)
+  -  ✅ Easier maintenance (drop old data fast)
+   - ✅ Better performance on huge tables
+  -  ✅ Helps with archival & data lifecycle
+
+  ```SQL
+        CREATE TABLE employees_partitioned (
+            emp_id INT NOT NULL,
+            name VARCHAR(50),
+            department_id INT NOT NULL,
+            salary DECIMAL(10,2),
+            PRIMARY KEY(emp_id, department_id)
+        )
+       PARTITION BY RANGE (department_id) (
+            PARTITION p0 VALUES LESS THAN (10),
+            PARTITION p1 VALUES LESS THAN (20),
+            PARTITION p2 VALUES LESS THAN (30),
+            PARTITION p3 VALUES LESS THAN MAXVALUE
+  );
+```
+
+## Partitioning vs Indexing (Very Important)
+
+| Feature            | Partitioning        | Indexing            |
+|--------------------|---------------------|---------------------|
+| Purpose            | Data management     | Fast lookups        |
+| Works on           | Large tables        | Any size            |
+| Storage            | Physical split      | Separate structure  |
+| Drop old data      | Instant             | Slow                |
+| Replaces index?    | ❌ No               | ❌ No               |
+
+
+---
+---
+
+# OLTP & OLAP
+
+* OLTP : real-time transation system(eg. banking system).
+* OLAP: analytical system for reporting(eg. sales dashboard).
+* default formate of Hdfs is text formate ,based on hardware 
+
+- dataware hosue api, DFS explaination in modern dataware house ( snowflag,redship)
+- database -> single server api-> OLTP -> support acid
+- dataware house -> sinlge server api -> OLAP
+- modern datawarehouse -> single server api-> OLAP->not acid( beacause its inbuilt on DFS)
+- dfs is only storage cant do processing
+- apache also give hadoop and spark (open source) to work on dfs 
+- spark is 100% faster than hadoop
+- spark is expensive
+- max spark project.- on databricks only 
+* delta lake - only dfs if we want to use acid property when we can use this and inbuit on dfs
+* lake house - data lake + delta lake + dataware house 
+
+--
+
+* batch injection pipeline -> exitsting data (tools to bring these data from client to us-apache schoop)
+      - periodic data loads
+* stream injection pipeline -> live server (tools -> kafka,flink,eventhub ,pubsub to bring data from client)
+      - real time data
+* we bring these data through pipeline and store it into bronze folder then we decide which folder we need to process
+* after the bronze we bring data to silver layer and then at last data goes to gold layer ,where final report will prepare.
+
+## Key principle of lakehouse architecture-
+
+* unified storage layers:
+  - stores stuctured(tables), semi-structured(json, logs) and unstructured(image, videos) data in one system
+  - typically built on scalable cloud object storage(eg. aws s3,azure,data lake staroge,google cloud storageà);
+
+1. **bronze layer**:this phase marks the input of row data, which is stored as if is collected,usally from varity of sources and in formats such as csv or json,the data is usally row data and varies in quality and structure.
+
+2. **Silver**:at this point, the data is processed and tranformed to achive cleaner,more structred data, task such as filtering,validataion,and normalization,of the data are carried out and stored in efficient formats,this phase may include defined schemas and additional metadata.
+
+  * Key goals:
+    - ensure data quality(remove errors,duplicates,inconsistencies).
+    - make data query ready for analysis and data scientists.
+    - provide a single source of truth for downstream gold layer.
+
+  * Data cleaning technique:
+    - NUll handling : 
+    - outlier detection : identify and correct extreme values
+    - deduplicatio : 
+    - data type fixing 
+    - standardization
+    - validation rules
+
+  * Data quality and governace
+    - ensures that data is trustworthy, compliant,and secure,forming the backbone of reliable analytics and ai.
+    - quality checks  ensures data is complete, consistent and valid.
+    - lineage provide transparency and tracebility.
+    - business rules enforce domain -specific logic.
+    - PII masking protect senstive information and ensurs compliance.
+
+  * masking technique:
+      1. static masking:replace sensitive values permanently
+
+3. **Gold layer**:
+
+
+
+---
+
+## CDC( change data capture)
+* change data capture is a technique to track and capture changes( insert ,update,delete) in database so they can be replicated or processed elsewhere.
+
+* purpose:keeps downstream systems(data warehouse,lakehouse,analytics pipelines) in sync with source databases in near real-time.
+
+* common uses: real-time etl pipeline,event-driven application
