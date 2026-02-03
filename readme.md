@@ -370,9 +370,8 @@ not magically jump to a single row in O(1).
       1. static masking:replace sensitive values permanently
 
 3. **Gold layer**:
-
-
-
+* to analysis the data we can use pyspark,spark scala,spark sql , spark java at bronze layer.
+* airflow used to craete the workflows,not etl pipelines,for your analysis job ,it is open source,databrick also gives inbuilt function for workflow.
 ---
 
 ## CDC( change data capture)
@@ -381,3 +380,130 @@ not magically jump to a single row in O(1).
 * purpose:keeps downstream systems(data warehouse,lakehouse,analytics pipelines) in sync with source databases in near real-time.
 
 * common uses: real-time etl pipeline,event-driven application
+
+* datafactory : batch injection as etl service
+* all etl tools are 100% code free,from last few years
+* two type of analysis after bringing the data -
+      1. Batch processing analysis -tools: HIV,Pyspark,Sparksql, ( Data is collected over a period of time and processed all at once)
+      2 .Online processing analysis - tools : delta,(Online processing handles real-time user transactions)(nosql,kasandra,hbash,mongodb)
+      3. stream proccssing analysis - tools:sparkStreaming (Data is processed continuously as it arrives)(kafka,eventhub,pubsub)
+      4. ML processing analysis(DS also can use databricks plateform)- tools:sparkMLIB
+* size of hdfs -> n node cluster 
+* in batch procss -> data comes and stored in dfs and then data comes in RAM for analysis using spark and then output is stored back to hdfs and then that output file we can send to BA person for report and to client 
+* 
+
+## key component of gold layer
+
+  1. fact and dimenstion table
+  2. star schema basics
+  3. aggregated kpis
+  4. connecting to BI tools
+  5. business ready curated table
+
+* for streaming analysis we use KAPPA and LAmbda architecture
+
+## tablewise modeling
+
+# Difference Between Conceptual, Logical, and Physical Data Models
+
+Data modeling is done in stages to move from **business understanding** to **actual database implementation**.  
+The three main data models are:
+
+- Conceptual Data Model
+- Logical Data Model
+- Physical Data Model
+
+---
+
+## 1. Conceptual Data Model
+
+### Definition
+The **conceptual data model** represents the **high-level business view** of data.  
+It focuses on **what data is needed**, not how it is stored.
+
+### Key Characteristics
+- Very high-level
+- Business-oriented
+- No technical details
+- No primary keys or foreign keys
+- Used by business stakeholders
+
+### Includes
+- Entities
+- Relationships between entities
+
+
+## 2. Logical Data Model
+
+### Definition
+The **logical data model** describes the **structure of data** in detail but is still **independent of any database system**.
+
+### Key Characteristics
+- More detailed than conceptual
+- Includes attributes (columns)
+- Defines primary keys and relationships
+- Normalized (usually up to 3NF)
+- No DB-specific details
+
+### Includes
+- Entities and attributes
+- Primary keys
+- Foreign keys
+- Constraints
+
+
+
+
+## 3. Physical Data Model
+
+### Definition
+The **physical data model** shows **how data is actually stored** in a specific database system.
+
+### Key Characteristics
+- Database-specific
+- Includes table names, column types
+- Indexes, constraints, partitions
+- Performance-focused
+
+### Includes
+- Tables and columns
+- Data types
+- Indexes
+- Storage details
+
+### Example (MySQL)
+```sql
+CREATE TABLE Customer (
+    customer_id INT PRIMARY KEY,
+    name VARCHAR(100),
+    email VARCHAR(100) UNIQUE
+);
+
+
+* batch processing always support data modeling(star and snowflag schema)
+
+## Grain
+
+* the grain defines the level of detail captured in fact table(eg:one row per product per day per store).
+
+## Surrogate keys vs netural keys
+
+* all system generated identifiers (auto increment ID)
+* natural keys:keys derived from business data(customer SSN,product Code).
+
+---
+
+## Brideg tables:
+
+* many to many relationship between dimensions and facts (student enrolled in multiple courses).
+* are used to handle many to many relationship in dimension models.instead of forcing a dimenstion to have a one to many relationship with facts.
+* a bridge table sits in between to resolve the complexity.
+
+
+-- all the course taken by the student
+select  
+
+  
+
+
+

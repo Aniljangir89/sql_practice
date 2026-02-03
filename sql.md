@@ -234,3 +234,6 @@ FROM Scores;
 
 ## lead()
 * is window function 
+
+* diff in ram and disk procssing 
+* if data in gold layer is in sc formate and layer folder is in datalake which store only nsc data??
