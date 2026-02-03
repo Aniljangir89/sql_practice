@@ -237,3 +237,5 @@ FROM Scores;
 
 * diff in ram and disk procssing 
 * if data in gold layer is in sc formate and layer folder is in datalake which store only nsc data??
+* means in one node put same block and all info in one node
+

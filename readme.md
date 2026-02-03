@@ -383,7 +383,7 @@ not magically jump to a single row in O(1).
 
 * datafactory : batch injection as etl service
 * all etl tools are 100% code free,from last few years
-* two type of analysis after bringing the data -
+## two type of analysis after bringing the data -
       1. Batch processing analysis -tools: HIV,Pyspark,Sparksql, ( Data is collected over a period of time and processed all at once)
       2 .Online processing analysis - tools : delta,(Online processing handles real-time user transactions)(nosql,kasandra,hbash,mongodb)
       3. stream proccssing analysis - tools:sparkStreaming (Data is processed continuously as it arrives)(kafka,eventhub,pubsub)
@@ -478,7 +478,7 @@ CREATE TABLE Customer (
     name VARCHAR(100),
     email VARCHAR(100) UNIQUE
 );
-
+```
 
 * batch processing always support data modeling(star and snowflag schema)
 
@@ -500,9 +500,85 @@ CREATE TABLE Customer (
 * a bridge table sits in between to resolve the complexity.
 
 
--- all the course taken by the student
-select  
+-------------
 
+
+
+### ETL – Extract, Transform, Load
+
+* Data is transformed before loading into the warehouse
+
+- Source → ETL Tool → Transform → Data Warehouse
+
+### ELT – Extract, Load, Transform
+
+* Data is loaded first
+* Transformation happens inside the warehouse
+
+-  Source → Data Warehouse → Transform (SQL)
+
+* etl opensource tool -> sqoop
+
+
+### what we need from source to establise connection:
+* IP
+* PORT
+* username
+* password
+* database name
+* table name 
+ - grant ?
+### for target:
+* HDFS(aws,azure,gcp)
+*  10+19+=29
+
+## HDFS
+* cluster->datacenter->racks->nodes
+* each node size>15GB
+* one name node(master node) other need to report to name node in each 3 sec ,it holds the meta data of other nodes
+* master node devide file into multiple blocks,and distribute it every where and replicates it 3 times,so dfs give fault tolerance.
+* block size is 128mb
+* not same block is stored in multiple nodes
+* master machine is also 2,3 
+* The Hadoop Distributed File System (HDFS) is a scalable and fault-tolerant storage solution designed for large datasets. It consists of NameNode (manages metadata), DataNodes (store data blocks), and a client interface. Key advantages include scalability, fault tolerance, high throughput, cost-effectiveness, and data locality, making it ideal for big data applications.
+
+## HDFS -blocks
+* fits well with replication to provide foult tolerance and avalilablity
+* adv of blocks:
+  - fixed size - easy to calculate how many fit on a disk
+  - a file can be larger tahn any. single disk in the network
+  - if a file or a chunk of the fil eis smaller than the block size, only need space is used 
+  - number of blocks is = number of task executing parallely
+* name node is always out of rack
+* SNN -> stand by name node
+* ANN -> Active name node
+
+![alt text](<images/Screenshot 2026-02-03 at 3.17.58 PM.png>)
+
+## Staging area in etl
+
+* in etl a staging area is temporary storage zone where raw data from multiple source is collected,cleaned and transformed before being loaded into the target data warehouse.It acts as a buffer between source system and the warehouse,ensureing data  quality and consistency
+
+* why testing is required: prevent data loss,duplication or corruption ,ensure data quality for analysis and reporting,detect issues early in the pipeline,,reducing downstream errors
+
+## ETl testing workflow
+ - requirement analysis:understand source,transoformation,and target schema.
+ - test planinig:defines test cases,scope
+ - test design:create sql querys
+ - test execution:run test on staging/warehouse
+ - defect reporting:log mismatches or transformation errors
+ - regression testing:revalidate after fixes.
+ - sign-off: confirm data quality before production
+
+ ## type of etl test
+ - source to target mapping validation:ensure field map correctly
+ - data completeness:all records are loaded without loss.
+ - data acuracy:values match expected resultafter transformation
+ - data transformation validataion:business rules applied correctly.
+
+* in hadoop mapreduce execute result
+* in spark sparkcore execute result
+  
   
 
 
