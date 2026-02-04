@@ -662,5 +662,63 @@ CREATE TABLE Customer (
 ![alt text](<images/Screenshot 2026-02-04 at 1.01.23 PM.png>)
 
 
+---
+---
+
+## HBASE(NO SQL)
+
+* this is column oriented
+* no need to mapreduce direct intarect with hdfs using hbase api
+* used for online processing of big data
+* this is adoop framework so it executes task in disk only 
+
+---
+
+## Hive dataware house articheture
+![alt text](<images/Screenshot 2026-02-04 at 3.00.43 PM.png>)
+
+* hive is dataware house so it is OLAP.
+* when we write query then first logic of query is excutes first in warehouse then conveted in mapreduce program 
+* then that mapreduce program will run in hdfs.
+  
+---
+
+## Spark yarn architecture
+
+* in spark : sparkcore(spark driver) -> yarn -> hdfs
+* we can use sparksql,pyspark,sparkscala,sparkjava..
+* this sparkcore engine is multiple lang api that support multiple api's.
+* all the blocks including replica are loaded into ram of that nodes
+* spark input is RDD(resielent distrbuted dataset)
+* so all the content of ram is in rdd so that my pyspark logic will run on RDD.
+* sparkcore take request from us and report to resouce manager.
+- The YARN ResourceManager allocates resources to Spark executors, not directly to RDDs.
+- Spark executors execute tasks on RDD partitions based on the logic defined in the Spark application.
+- Intermediate results are processed and kept in memory (or spilled to disk if needed), reducing disk I/O.
+- Results are written to HDFS or other storage systems only when explicitly specified by an action.
+- This in-memory processing model is why Spark is significantly faster than Hadoop MapReduce.
+- pyspark input data frame
+
+
+
+
+```text
+Client (PySpark / Spark SQL / Scala / Java)
+        |
+        v
+Spark Driver (Spark Core)
+        |
+        v
+YARN ResourceManager
+        |
+        v
+NodeManagers
+        |
+        v
+Executors (run tasks on data from HDFS)
+```
+
+
+  
 
 
