@@ -279,20 +279,20 @@ not magically jump to a single row in O(1).
    - ✅ Better performance on huge tables
   -  ✅ Helps with archival & data lifecycle
 
-  ```SQL
-        CREATE TABLE employees_partitioned (
-            emp_id INT NOT NULL,
-            name VARCHAR(50),
-            department_id INT NOT NULL,
-            salary DECIMAL(10,2),
-            PRIMARY KEY(emp_id, department_id)
-        )
-       PARTITION BY RANGE (department_id) (
-            PARTITION p0 VALUES LESS THAN (10),
-            PARTITION p1 VALUES LESS THAN (20),
-            PARTITION p2 VALUES LESS THAN (30),
-            PARTITION p3 VALUES LESS THAN MAXVALUE
-  );
+```SQL
+      CREATE TABLE employees_partitioned (
+          emp_id INT NOT NULL,
+          name VARCHAR(50),
+          department_id INT NOT NULL,
+          salary DECIMAL(10,2),
+          PRIMARY KEY(emp_id, department_id)
+      )
+      PARTITION BY RANGE (department_id) (
+          PARTITION p0 VALUES LESS THAN (10),
+          PARTITION p1 VALUES LESS THAN (20),
+          PARTITION p2 VALUES LESS THAN (30),
+          PARTITION p3 VALUES LESS THAN MAXVALUE
+);
 ```
 
 ## Partitioning vs Indexing (Very Important)
@@ -335,6 +335,33 @@ not magically jump to a single row in O(1).
       - real time data
 * we bring these data through pipeline and store it into bronze folder then we decide which folder we need to process
 * after the bronze we bring data to silver layer and then at last data goes to gold layer ,where final report will prepare.
+
+### Data lake :
+- A data lake is a storage system that holds large amounts of raw data in its original format, whether structured, semi-structured, or unstructured, so it can be used later for analysis.
+
+## Delta Lake 
+* Think of Delta Lake as a smart notebook on top of a messy pile of papers (your data lake).
+* A data lake (DFS = distributed file system, like S3/HDFS) is like a huge pile of papers: anyone can dump things, files can be messy, and it’s hard to keep track.
+* Delta Lake adds rules to this notebook:
+     -   It tracks changes (ACID transactions) → nothing gets lost or messed up.
+     -   You can update, delete, or go back in time → like being able to undo a page you wrote.
+     -   It makes messy files reliable and query-friendly.
+✅ Key point: You only need Delta Lake if you want ACID properties (reliable transactions) on top of your plain data lake. Otherwise, just using DFS (S3/HDFS) is fine for storing raw data
+
+## Lake house
+* Now, a Lakehouse is like a super-organized office:
+      -  Data Lake: Raw messy papers stored in bulk.
+      -  Delta Lake: A smart notebook on top of it with rules and versioning.
+      -  Data Warehouse: A polished filing cabinet for clean, ready-to-use reports and analytics.
+* So a Lakehouse = Data Lake + Delta Lake + Data Warehouse functionality:
+     - You can store raw data (data lake)
+     - Keep it reliable and query-ready (Delta Lake)
+     - Run analytics/reporting like a warehouse
+
+## why we use etl in dataware house and elt in data lake why not only one ?
+  -  ETL is needed for structured, pre-cleaned data in data warehouses.
+   - ELT is needed for raw, flexible, large-volume data in data lakes.
+   - Different use-cases: one method cannot efficiently serve both structured and raw/unstructured data.
 
 ## Key principle of lakehouse architecture-
 
@@ -579,7 +606,61 @@ CREATE TABLE Customer (
 * in hadoop mapreduce execute result
 * in spark sparkcore execute result
   
-  
+
+
+  * snowflake is cloud data warehouse.
+  * Cloud storage is object storage, not HDFS. HDFS only exists if you intentionally run Hadoop.
+
+
+
+| Cloud Platform         | Storage Service Name                   |
+|------------------------|----------------------------------------|
+| **AWS**                | **Amazon S3 (Simple Storage Service)** |
+| **Azure**              | **Azure Blob Storage**                 |
+| **Google Cloud (GCP)** | **Google Cloud Storage (GCS)**         |
+
+---
+---
+
+* to analysis data from dfs name of hadoop engine is mapreduce (to analysis big data recommanded framework - hadoop 2.x ,3.x)
+* hadoop 1.x - only single name node supports ( no availability,no resource management) to overcome this apache said we gives 2.x and 3.x version
+* after that no one uses 1.x ,after that hadoop ads **YARN** library in 2.x and 3.x to overcome single point failer.
+* yarn work with multiple name node( to work with ANN and SNN)
+* if two name node works then definetly yarn will be there, gives resource managment and high availability.
+* components of hadoop ecosystem : sqoop,flume,hive,pig,(execpt hbase),ooziee they cant work without mapreduce engine they need to work with mapreduce. 
+* hdfs nows only mapreduce program only.(only for hadoop cluster ).
+* scoop is used to bring existing data from client db to target.
+* flume is used to bring live server data to hdfs(expird because of kafka).
+* hive is data analysis tool,this is like a dataware house,we use 100%.sql lang for that but name will **HIVQL**
+* PIG : this is scripting lang used to analysis the data(expired)
+* ooziee:used for create workflow(expired because of airflow)
+* hbase : this is nosql used for online processing,this is not executing through map reduce, this work directly with hdfs.
+* these all name of animal and apache gives the zookeaper to manage all the components of hadoop
+* now we are not uses mapreduce because it takes more line of code,but we still use this concept of mapreduce,so we use **HIV** instead of mapreduce but it works throgh mapreduce not directly,
+* but hbase works directly with hdfs, this is OLAP
+* if we want hadoop big data analysis then hiv and hbase are important  data analysis tools .
+* hadoop do only 2 type of analysis - batch(hive) and live(hbase).
+
+---
+## Hadoop 1.x architecure
+
+- master slive api?
+* in map reduce n tasktracker on n nodes - used to process the data in hdfs
+* job tracker is also there to manage tasktraker
+* when we run hiv and mapreduce program in hadoop analysis,then jobtracker takes responsibility,and ask to name node ,then name node give info to jobtracker and then job tracker assign task to all these task tracker( these an jvm machines) then these tasktracker goes to these data node besed on their job and run thier logic and gives result back to job tracker.
+* limititation - FIFO
+![alt text](<images/Screenshot 2026-02-04 at 12.45.24 PM.png>)
+
+
+---
+## Hadoop 2.x Yarn achitecture
+
+* every data node have one node manager
+* resource manager takes the request from us .this is connected with ANN and SNN.
+* per job resource manager release one application master and then applicataion master ask resrouce manager(RM) - " ki bhai mujhe node mangaers chahiye appn kam krane ke liye"
+* these node manger executes the task and gives the result back to application manager.
+![alt text](<images/Screenshot 2026-02-04 at 1.01.23 PM.png>)
+
 
 
 
