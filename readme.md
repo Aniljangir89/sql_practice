@@ -1076,8 +1076,9 @@ Apache Spark provides two main abstractions for distributed data processing:
   - Broadcast variables
   - Accumulators
 
-rdd.map(lambda x: x * 2).collect()
-```
+      ```python
+      rdd.map(lambda x: x * 2).collect()
+      ```
 ## Homework: 
 * 1. find the avg word length?
 
@@ -1087,5 +1088,7 @@ rdd.map(lambda x: x * 2).collect()
 
 ![alt text](<images/Screenshot 2026-02-09 at 4.11.06 PM.png>)
 
+### how to create data frame for hdfs file 
+* 
 
 
