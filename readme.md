@@ -968,7 +968,124 @@ LOCATION 'sales/fold3';
 
 
 ## HIVE TO HDFS
-```text
-    insert overwrite directory 'retails/myfile.csv' select * from emp;
-    
+      ```text
+          insert overwrite directory 'retails/myfile.csv' select * from emp;
+      ```
+
+
+-------
+------
+
+### Spark
+
+* inputs datastructure:
+   1. rdd : any formate ,faulttooler, immuable,rdd:limited performance
+   2. df: structured data,semi structure (df>rdd)
+   3. dataset: extension of df, opps api
+  
+* RDD analysis ( batch proccesing ): pyspark
+
+### there is 3 way to create the rdd
+
+1. using parallelize(): directly we can pass any list data into menory 
+    - syntax: sc.parallelize([1,2,3,4])
+    - NOTE: sc(spark context) is sparkapi lib using to define the sparkdriver
+2. from hdfs file.
+3. from exsting data.
+
+### Spark : 2type of function 
+1. tranformations
+    - narrow transformation : map level(spilt,condition)-> map,flatmap,mappartition,filter,sample,union
+    - wide transformation : reduce level(aggregations)->intersection,distinct,reduceByKey,GroupByKey,Join,Cartesian,Repartition,Coalesce
+2. actions:to display or save to rdd to hdfs->count(),collect(),saveAsTextFile(),first()
+  
+* NOTE: spark is LAZY evaluation?:spark job will not execute untill you trigger the action function 
+* NOTE: spark Engine by default create the one DAG per job 
+  -  DAG: set of stages
+  - sum of stages: num of wide transformation +1
+* DAG:using to debugging the spark job to check the stages of job
+
+![alt text](<images/Screenshot 2026-02-09 at 12.42.37 PM.png>)
+
+* one block = one partition
+* to verify the number of partition of rdd
+    ```text
+        xyz.getNumPartitions()
+    ```
+* to reduce the number of partition of RDD
+    ```text
+        abc.getNumPartitions()
+    ```
+* to increase the number of partition 
+
+   ```text
+      rama = abc.repartition(4)
+   ```
+
+* df is already optiomized so that df is faster but in rdd we neet to use partitions to optimize it.
+* lots of garbage collection so that performance of rdd will decreases
+* for analysis of unsturctured data then only we choose rdd 
+
+    ```text
+        words = sc.parallelize(['ram','anil','anil','rakesh'])
+        words.getNumPartitions()
+        words_filter  = words.filter(lambda x:'anil' in x )
+        words_filter.collect()
+    ```
+
+* map:using to form data as key,value pair or split data with delimiter
+* flatmap:using to split content of file with specific delimiter
+  
+### how to create rdd of exiting hdfs fil e
+
+* note: if any rdd is reusable to solve the multiple problem then we can keep the rdd in memory only using CACHE()
+* PARSIST() : in memory and disk
+* once analysis done on rdd u can uncache the rdd using uncache()
+* cache() is optimization technique to increase the performance of execution
+# Spark RDD vs DataFrame (DF)
+
+## Overview
+Apache Spark provides two main abstractions for distributed data processing:
+- RDD (Resilient Distributed Dataset)
+- DataFrame (DF)
+
+---
+
+## Comparison Table
+
+| Feature | RDD | DataFrame (DF) |
+|-------|-----|----------------|
+| Data Type | Unstructured | Structured / Semi-structured |
+| Schema | No schema | Schema-based |
+| Performance | Limited performance | Better performance |
+| Optimization | No built-in optimization | Built-in optimization (Catalyst Optimizer) |
+| API Level | Low-level API | High-level API |
+| Ease of Use | Complex | Easier and more expressive |
+| Language Support | Scala, Java, Python | Scala, Java, Python, SQL |
+
+---
+
+## Operations
+
+### RDD
+- Uses **Transformations** and **Actions**
+- Supports:
+  - `cache()`
+  - `partition()`
+- Shared Variables:
+  - Broadcast variables
+  - Accumulators
+
+rdd.map(lambda x: x * 2).collect()
 ```
+## Homework: 
+* 1. find the avg word length?
+
+   
+
+## architecture of spark SQL
+
+![alt text](<images/Screenshot 2026-02-09 at 4.11.06 PM.png>)
+
+
+
