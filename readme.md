@@ -718,7 +718,377 @@ NodeManagers
 Executors (run tasks on data from HDFS)
 ```
 
+---
 
+## HDFS commands
+
+*  hadoop fs -mkdir retails (create dir in hdfs)
+*  hadoop fs -ls retails (to list files fo directory) 
+*  hadoop fs -mkdir retails/salesdata (create subdir in hdfs)
+*  hadoop fs -rmr retails/salesdata (remove the dir from hdfs)
+*  hadoop fs -ls retails
+*  hadoop fs -put ramdata.txt retails
+* hadoop fs -ls retails 
+* how to check about the hadoop blocks : hadoop fsck / -blocks
+
+## safe mode
+
+* go to the current safe node status
+* hadoop dfsadmin -safemode get : check if safe mode is off or not 
+
+## HIVe 
+* hiv is olap but not oltp
+* hiv is used to analysis any large value of structured and sem structred data.
+* hiv default storage is dfs
+* when we run hive querys then in backend that query convert into mapredure program
+* to maintain schema hive use metastore.
+* there are 2 type of datatypes in hive -
+      1. primitive - int,float,double,long,strign
+      2. complex datatype - struct, map, array
+   
+* hive and hadoop are extensively used in face book for different kind of operations. around 700TB
+* think of other application model that can levarge hadoop MR
+
+## HIVE commands and function 
+
+* hive support all mysql command and function except insert,uptate,delete
+* before loading the data table from hdfs to hive ware house we need to create schema for that.
   
+### there are two type of tables in dataware house :
+
+* 1. internal tables(managed tables):tables which are storring in dw is called internal tables.recommanded for analysis
+* 2. external tables(unmanagable tables):tabels data storing in external location ei hdfs or localfilesystem
+  * how to create external tables :
+    ```text
+        retails/ram.csv
+    ```
+
+    ```hive
+      create external table abc(id int,city string,country string) row format delimited fields terminated by ',' location retails/ram.csv
+      select  * from abc;
+    ```
+
+* once internaltabel analysis done the op of internal table analysis we will take into the external tables to these external tables >> bi->reports
+
+```hive
+  create external table myexteb(schema data...) row formate delimited fields terminated by ',' /user/hadoop/retails/salesdata/xy.txt;
+  insert overwrite table myexteb select  * from interx where country = 'india';
+```
+
+
+# Hive Internal → External Table Workflow Example
+
+Let’s do a **hands-on example** step by step, to see how internal → external → BI flow works in Hive. We'll use a small warehouse/sales dataset.
+
+---
+
+## Step 0: Sample CSV File
+
+Create `sales.csv` on Linux:
+
+```csv
+sale_id,product,quantity,price,country
+1,Apple,10,100,India
+2,Banana,20,50,USA
+3,Orange,15,80,India
+4,Mango,5,200,UK
+5,Apple,25,100,India
+```
+* create internal table
+```hive
+      CREATE TABLE sales_internal (
+          sale_id INT,
+          product STRING,
+          quantity INT,
+          price INT,
+          country STRING
+      )
+      ROW FORMAT DELIMITED
+      FIELDS TERMINATED BY ','
+      STORED AS TEXTFILE;
+```
+
+* Load CSV into Internal Table
+```hive
+      LOAD DATA LOCAL INPATH '/home/hadoop/sales.csv' 
+      INTO TABLE sales_internal;
+```
+
+* verify data
+
+```hive
+  SELECT * FROM sales_internal;
+```
+
+* Step 2: Analysis on Internal Table
+
+
+```hive
+      SELECT product, SUM(quantity*price) AS total_sales
+      FROM sales_internal
+      WHERE country='India'
+      GROUP BY product;
+```
+
+* Step 3: Create External Table (for BI)
+```hive
+    CREATE EXTERNAL TABLE sales_india (
+        product STRING,
+        total_sales INT
+    )
+    ROW FORMAT DELIMITED
+    FIELDS TERMINATED BY ','
+    STORED AS TEXTFILE
+    LOCATION '/user/hadoop/retails/salesdata/india';
+
+```
+* Step 4: Move Data to External Table
+
+```hive
+        INSERT OVERWRITE TABLE sales_india
+        SELECT product, SUM(quantity*price) AS total_sales
+        FROM sales_internal
+        WHERE country='India'
+        GROUP BY product;
+```
+* Now your external table contains the analyzed data.
+
+* Step 5: Query External Table
+
+``` hive
+SELECT * FROM sales_india;
+```
+* Hive does not combine all table data into the same folder. Each table points to its own location.
+
+* TBLPROPERTIES ("skip.header.line.count"="1"); why this? : if data is in file contains column so we need to skip that row .
+
+
+### to create parquet file for hive optimization
+```text
+    create table myparq(
+      id int,
+      name string,
+      age int
+    )
+    stored as parquet
+```
+
+```text
+    insert overwrite table myparquet select * from xyz
+```
+
+## HIVE Partitions:
+* using to increase the performace of query execution 
+* partition : large table
+* partition : partitioned by(colomnname datatye)
+* note : create partition tabels for existing tabels(internal tables) of dw
+* partition not default in hive dw so we activate the partition lib in hive dw using set commands before overwrite the internal table to partition table.
+* partititon column are storing in dw as directories(ie  ever unique value of the column storing as directory in hive dw)
+
+      ```text
+         create table mypart(id int,country string) partitioned by (city string) row formate delimited fields terminated by ',';
+
+
+         SET hive.exec.dynamic.partition = true;
+         SET hive.exec.dynamic.partition = nonstrict;
+
+
+         insert overwrite table mypart partition(city) select id,country,city from xyz;
+
+         select * from mypart; 
+      ```
+* to overcome the drawbacks fo partitions : Bucketing
+* bucketing : we can choose num of buckets
+* clustered by:bucketing
+* patitioned by: partition
+* note : bucketing columns are storing in dw as a files 
+* note: to create the bucketing isnot default dw so we have to activate bucketing using set commands before overwrite the bucketing table from nonbucketing table
+* we will create bucketing table from existing table(internal table of hive dw )
+
+---
+
+```text
+    create table mybucket(id int,city string,country strign) clustered by(city) into 3 buckets row formate delimited field terminated by ',';
+
+    set hive.enforce.bucketing  = true;
+    insert overwrite table mybucket select id,city,country  from xyz;
+    select * from mybucket;
+    exit;
+    hadoop fs -ls /user/hive/warehouse/mybucket
+```
+* note : tablesample: inbuild keyword for bucketing analysis(sample queries);
+* select id from mybucket tablesample(bucket 1 out of 3 on city);
+  
+---
+### Indexing
+* create index myfirstindex on table sales(city) as 'org.apache.hive.ql.index.compact.CompactIndexHandler' with  deferred rebuild
+* display indexs of specific tables;
+  ```text
+     show formatted index on sales;
+  ```
+---
+### temporary tables:
+
+```text
+  create view abc as select id,city from emp where country = 'india'
+  select * from abc;
+
+```
+
+
+---
+---
+
+### map side join(preferred when possible)
+* one dataset is small(fits it memory)
+* date is pre stored and partitioned on the join key.
+* example:joining a largr transaction log with a small customer reference table.
+  
+### reduce-side join(fallback option ):
+* both dataset are large and cant fit into memory.
+* no preprocessing guarantee(unsorted,unpartitioned data).
+* example:joining two massive log file across multiple keys.
+
+
+## to load json data 
+* we need to use jsonSerde (serializer/desericalizer)
+CREATE EXTERNAL TABLE sales_json (
+    sale_id INT,
+    product STRING,
+    quantity INT,
+    price INT,
+    country STRING
+)
+ROW FORMAT SERDE 'org.apache.hive.hcatalog.data.JsonSerDe'
+STORED AS TEXTFILE
+LOCATION 'sales/fold3';
+
+## what json serde in hive?
+* SerDe = serializer/Deserializer -> defines how hive read/write data
+
+
+## HIVE TO HDFS
+      ```text
+          insert overwrite directory 'retails/myfile.csv' select * from emp;
+      ```
+
+
+-------
+------
+
+### Spark
+
+* inputs datastructure:
+   1. rdd : any formate ,faulttooler, immuable,rdd:limited performance
+   2. df: structured data,semi structure (df>rdd)
+   3. dataset: extension of df, opps api
+  
+* RDD analysis ( batch proccesing ): pyspark
+
+### there is 3 way to create the rdd
+
+1. using parallelize(): directly we can pass any list data into menory 
+    - syntax: sc.parallelize([1,2,3,4])
+    - NOTE: sc(spark context) is sparkapi lib using to define the sparkdriver
+2. from hdfs file.
+3. from exsting data.
+
+### Spark : 2type of function 
+1. tranformations
+    - narrow transformation : map level(spilt,condition)-> map,flatmap,mappartition,filter,sample,union
+    - wide transformation : reduce level(aggregations)->intersection,distinct,reduceByKey,GroupByKey,Join,Cartesian,Repartition,Coalesce
+2. actions:to display or save to rdd to hdfs->count(),collect(),saveAsTextFile(),first()
+  
+* NOTE: spark is LAZY evaluation?:spark job will not execute untill you trigger the action function 
+* NOTE: spark Engine by default create the one DAG per job 
+  -  DAG: set of stages
+  - sum of stages: num of wide transformation +1
+* DAG:using to debugging the spark job to check the stages of job
+
+![alt text](<images/Screenshot 2026-02-09 at 12.42.37 PM.png>)
+
+* one block = one partition
+* to verify the number of partition of rdd
+    ```text
+        xyz.getNumPartitions()
+    ```
+* to reduce the number of partition of RDD
+    ```text
+        abc.getNumPartitions()
+    ```
+* to increase the number of partition 
+
+   ```text
+      rama = abc.repartition(4)
+   ```
+
+* df is already optiomized so that df is faster but in rdd we neet to use partitions to optimize it.
+* lots of garbage collection so that performance of rdd will decreases
+* for analysis of unsturctured data then only we choose rdd 
+
+    ```text
+        words = sc.parallelize(['ram','anil','anil','rakesh'])
+        words.getNumPartitions()
+        words_filter  = words.filter(lambda x:'anil' in x )
+        words_filter.collect()
+    ```
+
+* map:using to form data as key,value pair or split data with delimiter
+* flatmap:using to split content of file with specific delimiter
+  
+### how to create rdd of exiting hdfs fil e
+
+* note: if any rdd is reusable to solve the multiple problem then we can keep the rdd in memory only using CACHE()
+* PARSIST() : in memory and disk
+* once analysis done on rdd u can uncache the rdd using uncache()
+* cache() is optimization technique to increase the performance of execution
+# Spark RDD vs DataFrame (DF)
+
+## Overview
+Apache Spark provides two main abstractions for distributed data processing:
+- RDD (Resilient Distributed Dataset)
+- DataFrame (DF)
+
+---
+
+## Comparison Table
+
+| Feature | RDD | DataFrame (DF) |
+|-------|-----|----------------|
+| Data Type | Unstructured | Structured / Semi-structured |
+| Schema | No schema | Schema-based |
+| Performance | Limited performance | Better performance |
+| Optimization | No built-in optimization | Built-in optimization (Catalyst Optimizer) |
+| API Level | Low-level API | High-level API |
+| Ease of Use | Complex | Easier and more expressive |
+| Language Support | Scala, Java, Python | Scala, Java, Python, SQL |
+
+---
+
+## Operations
+
+### RDD
+- Uses **Transformations** and **Actions**
+- Supports:
+  - `cache()`
+  - `partition()`
+- Shared Variables:
+  - Broadcast variables
+  - Accumulators
+
+      ```python
+      rdd.map(lambda x: x * 2).collect()
+      ```
+## Homework: 
+* 1. find the avg word length?
+
+   
+
+## architecture of spark SQL
+
+![alt text](<images/Screenshot 2026-02-09 at 4.11.06 PM.png>)
+
+### how to create data frame for hdfs file 
+* 
 
 
