@@ -1092,8 +1092,8 @@ Apache Spark provides two main abstractions for distributed data processing:
 
 
 ## Predicate pushdown
-* why:push file filter down to the data source(parquet,orc) -> less data read.
 * parquet file with predicate pushdown 
+* why:push file filter down to the data source(parquet,orc) -> less data read.
 
 ```text
   parquet_df = spark.read.parquet("/temp/sales_parquet")
@@ -1160,5 +1160,60 @@ Apache Spark provides two main abstractions for distributed data processing:
 - A Broadcast Join is an optimization technique in Spark used to join a large DataFrame with a small DataFrame.
 - The small DataFrame is broadcast (sent) to all worker nodes.
 - This avoids data shuffling, which improves performance.
+
+### when to use broadcasting joins
+- One table is very small and fits in memory.
+- The other table is large.
+- Used mainly in fact–dimension joins.
+- normal join is expensive because suffeling will take place
+- so we will do broadcasting join
+
+
+## Suffle optimization 
+
+* why shuffles happen
+* a suffle occure when spark needs to redistribute data across partitions(eg. during group By ,join,or distinct)
+* by default,spark uses 2000 shuffles partitions(sparks.sql.shuffles.partitions = 200) for small datasets.this is wastefull - it creates too many tiny tasks they involve disk i/o + network transfer
+* suffles are expensvie bcs th
+
+
+### So optimize the suffle
+* reduce shuffle partitions for small dataset
+* spark.conf.set("spark.sql.shuffle.partitions","5")
+* run the same groupBy again 
+* result_opt = df.groupBy("dept").agg(F.avg("salary").alias("avg_salary))
+* result_opt.show()
+
+## catalyst optimizer
+* sparks query optimization framework. it transforn logical query plan into optimized physical plans.
+
+
+### phases of optimization(catalyst process queries through several stages)
+![alt text](</images/Screenshot 2026-02-10 at 3.09.19 PM.png>)
+* analysis:convert an unresolved logical plan(row query) into resolved logical plan by checking scheman,column names,and data tyes
+* logical optimzation
+* physical planning
+* code generation: spark use tungsten engine
+
+### so catatlyst will do internally?
+
+
+## UDF
+* udf let you extend spark sql's inbuilt function by writing your own custom logic in python,scala,or java.
+
+## Nested Structure
+
+* what they are : spark data frames can hold complex datatype like structs,array,and maps, these ar called nested structured because they contains multiple fields inside one column
+
+
+| Feature               | Local Mode                | Client Mode                         | Cluster Mode                         |
+|-----------------------|--------------------------|------------------------------------|-------------------------------------|
+| Driver Location       | same machine as user    | same machine as user                   | worker node in cluster                      |
+| Executors Location    | Local machine            | Cluster nodes                       | Cluster nodes                        |
+| Requires Cluster      | ❌ No                    | ✅ Yes                               | ✅ Yes                                |
+| Use Case              | Learning, testing        | Interactive jobs                     | Production jobs                       |
+| Fault Tolerance       | Low                      | Medium (job fails if client dies)   | High (driver runs on cluster node)   |
+| Performance           | Low (single machine)     | Medium                               | High                                  |
+| Startup Complexity    | Very easy                | Moderate                             | Higher                                |
 
 
