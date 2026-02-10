@@ -1088,7 +1088,77 @@ Apache Spark provides two main abstractions for distributed data processing:
 
 ![alt text](<images/Screenshot 2026-02-09 at 4.11.06 PM.png>)
 
-### how to create data frame for hdfs file 
-* 
+* by default 2 executor that released by cluster manager.
+
+
+## Predicate pushdown
+* why:push file filter down to the data source(parquet,orc) -> less data read.
+* parquet file with predicate pushdown 
+
+```text
+  parquet_df = spark.read.parquet("/temp/sales_parquet")
+```
+* filter applied before reading full dataset
+  
+---
+---
+# Spark SQL handsOn:
+
+* i want to run pure sql query on the data frame 
+* note: register dataframe as a tempview or table
+* make dataframe as a table
+* then we run sql query
+  
+## temporary and global views
+
+### 1. Temporary views: 
+ - A Temporary View is a session-scoped view created from a DataFrame.
+ - It is available only within the current SparkSession.
+ - The view is automatically dropped when the Spark session ends.
+ - Temporary views are used to run SQL queries on DataFrames.
+ - They are not shared across different Spark sessions.
+      ```text
+        df.createOrReplaceTempView("emp_view")
+      ```
+### 2. Global Temporary views:
+
+  - A Global Temporary View is an application-scoped view.
+-  It is accessible across all SparkSessions within the same Spark application.
+  - Global temporary views are stored in a special database called global_temp.
+-  The view is dropped automatically when the Spark application stops.
+-  While querying, the global_temp prefix is mandatory.
+    ```text
+        df = spark.read.csv("emp.csv", header=True)
+        df.createOrReplaceTempView("emp")
+        spark.sql("SELECT count(*) FROM emp").show()
+    ```
+
+  ## DF optimizer
+  * data frame is already optimized but still we need to optimise it 
+  * 1. partition
+  * 2. fileFormate
+  * 3. broadcasting
+  * 4. shuffle optimizer
+  * 5. catalyst and tungsten
+
+
+## Caching and Persistence
+
+* cache in memeory : df.cache()
+* persist with memory + disk
+  ```text
+      from pyspark import StoargeLevel
+      df.persist(StorageLevel.MEMORY_AND_DISK)
+      # triger caching
+      df.count()
+  ```
+
+* use cache() for repeated queries on the same data frame
+* use preist() when data is too large for memory(spill to disk)
+
+## BroadCasting Join
+- A Broadcast Join is an optimization technique in Spark used to join a large DataFrame with a small DataFrame.
+- The small DataFrame is broadcast (sent) to all worker nodes.
+- This avoids data shuffling, which improves performance.
 
 
